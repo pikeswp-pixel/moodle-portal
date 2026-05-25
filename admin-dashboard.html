@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ─── Tokens ─────────────────────────────────────── */
+:root {
+  --bg:       #080b12;
+  --surface:  #0e1220;
+  --surface2: #141929;
+  --surface3: #1a2035;
+  --border:   #222b40;
+  --border2:  #2d3a55;
+  --accent:   #4f8ef7;
+  --accent2:  #7c5cfc;
+  --success:  #22c55e;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --info:     #06b6d4;
+  --text:     #e8eaf0;
+  --muted:    #6b7694;
+  --muted2:   #4a5270;
+  --font:     'Sora', sans-serif;
+  --mono:     'Space Mono', monospace;
+  --sidebar-w: 240px;
+}
+
+/* ─── Reset ──────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { height:100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+}
+
+/* ─── Noise overlay ──────────────────────────────── */
+body::after {
+  content:'';
+  position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:9999; opacity:.6;
+}
+
+/* ─── Sidebar ────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  z-index: 10;
+}
+
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-badge {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 16px rgba(79,142,247,0.35);
+}
+
+.logo-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.logo-sub {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-top: 2px;
+  font-family: var(--mono);
+  letter-spacing: 0.05em;
+}
+
+.sidebar-section {
+  padding: 16px 12px 8px;
+}
+
+.sidebar-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 0 8px;
+  margin-bottom: 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--muted);
+  transition: all 0.18s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  position: relative;
+}
+
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+
+.nav-item.active {
+  color: var(--accent);
+  background: rgba(79,142,247,0.1);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+
+.nav-icon { font-size: 1rem; flex-shrink: 0; width: 18px; text-align: center; }
+
+.nav-count {
+  margin-left: auto;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-family: var(--mono);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 99px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.nav-count.warn { background: var(--danger); }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.admin-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.admin-avatar {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+
+.admin-name { font-size: 0.78rem; font-weight: 600; }
+.admin-role { font-size: 0.65rem; color: var(--muted); }
+
+/* ─── Main ───────────────────────────────────────── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ─── Topbar ─────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.topbar-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s;
+}
+
+.btn-ghost {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(79,142,247,0.3);
+}
+
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,142,247,0.4); }
+
+.live-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:.6; transform:scale(1.3); }
+}
+
+/* ─── Content scroll area ────────────────────────── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px 40px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.content::-webkit-scrollbar { width: 6px; }
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ─── Stat cards ─────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+  animation: fadeUp 0.5s ease both;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.stat-card:hover { border-color: var(--border2); }
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 60px; height: 60px;
+  border-radius: 0 14px 0 60px;
+  background: var(--s-color, var(--accent));
+  opacity: 0.07;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.stat-num {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  color: var(--s-color, var(--accent));
+}
+
+.stat-meta { font-size: 0.72rem; color: var(--muted); }
+
+/* ─── Filter / Search bar ────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  animation: fadeUp 0.5s 0.1s ease both;
+  flex-wrap: wrap;
+}
+
+.search-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.search-wrap input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px 10px 38px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79,142,247,0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.filter-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 32px 10px 12px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7694' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color 0.2s;
+}
+
+.filter-select:focus { border-color: var(--accent); outline: none; }
+
+/* ─── Table ──────────────────────────────────────── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  animation: fadeUp 0.5s 0.15s ease both;
+}
+
+.table-header-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 140px 90px 90px 110px 130px;
+  padding: 12px 20px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  gap: 10px;
+}
+
+.ticket-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 140px 90px 90px 110px 130px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  animation: fadeRow 0.4s ease both;
+}
+
+.ticket-row:last-child { border-bottom: none; }
+.ticket-row:hover { background: var(--surface2); }
+
+@keyframes fadeRow {
+  from { opacity:0; transform:translateX(-8px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
+.cell-ref {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-subject { }
+
+.cell-subject strong {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.cell-subject span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.cell-dept {
+  font-size: 0.75rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.badge-open    { background: rgba(79,142,247,0.12); color: var(--accent);  border: 1px solid rgba(79,142,247,0.25); }
+.badge-pending { background: rgba(245,158,11,0.12); color: var(--warning); border: 1px solid rgba(245,158,11,0.25); }
+.badge-closed  { background: rgba(34,197,94,0.12);  color: var(--success); border: 1px solid rgba(34,197,94,0.25); }
+
+.badge-low    { background: rgba(34,197,94,0.1);   color: var(--success); border: 1px solid rgba(34,197,94,0.2); }
+.badge-medium { background: rgba(245,158,11,0.1);  color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+.badge-high   { background: rgba(239,68,68,0.1);   color: var(--danger);  border: 1px solid rgba(239,68,68,0.2); }
+
+.dot-sm { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+
+.cell-date { font-size: 0.72rem; color: var(--muted); font-family: var(--mono); }
+
+.cell-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  transition: all 0.18s;
+}
+
+.action-btn:hover { border-color: var(--border2); color: var(--text); background: var(--surface3); }
+.action-btn.close-btn:hover { border-color: var(--success); color: var(--success); background: rgba(34,197,94,0.08); }
+.action-btn.del-btn:hover   { border-color: var(--danger);  color: var(--danger);  background: rgba(239,68,68,0.08); }
+.action-btn.reopen-btn:hover { border-color: var(--accent); color: var(--accent);  background: rgba(79,142,247,0.08); }
+
+/* ─── Empty state ────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--muted);
+  text-align: center;
+  gap: 10px;
+}
+
+.empty-icon { font-size: 2.5rem; opacity: 0.5; }
+.empty-title { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.empty-sub { font-size: 0.8rem; }
+
+/* ─── Pagination ─────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.page-btns { display: flex; gap: 6px; }
+
+.page-btn {
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.18s;
+}
+
+.page-btn:hover { border-color: var(--accent); color: var(--accent); }
+.page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.page-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* ─── Drawer / detail panel ──────────────────────── */
+.drawer-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 200;
+  backdrop-filter: blur(3px);
+}
+
+.drawer-overlay.open { display: block; }
+
+.drawer {
+  position: fixed;
+  top: 0; right: -520px;
+  width: 480px;
+  max-width: 95vw;
+  height: 100vh;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.35s cubic-bezier(0.32,0.72,0,1);
+  overflow: hidden;
+}
+
+.drawer.open { right: 0; }
+
+.drawer-top {
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.drawer-close {
+  margin-left: auto;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.18s;
+}
+
+.drawer-close:hover { color: var(--text); border-color: var(--border2); }
+
+.drawer-ref {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.drawer-subject {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 22px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.drawer-section { margin-bottom: 22px; }
+
+.drawer-section-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.detail-item label {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.detail-item p {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.desc-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 0.83rem;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.drawer-footer {
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.drawer-footer .btn { flex: 1; justify-content: center; }
+
+.btn-success {
+  background: rgba(34,197,94,0.15);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: var(--success);
+}
+.btn-success:hover { background: rgba(34,197,94,0.25); }
+
+.btn-warn {
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.25);
+  color: var(--warning);
+}
+.btn-warn:hover { background: rgba(245,158,11,0.22); }
+
+.btn-danger-soft {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: var(--danger);
+}
+.btn-danger-soft:hover { background: rgba(239,68,68,0.2); }
+
+/* ─── Status change select in drawer ─────────────── */
+.status-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 28px 7px 10px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7694' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.18s;
+}
+
+.status-select:focus { border-color: var(--accent); }
+
+/* ─── Notes / response area ──────────────────────── */
+.notes-area {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.83rem;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 90px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.notes-area:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79,142,247,0.1);
+}
+
+/* ─── Confirm dialog ─────────────────────────────── */
+.confirm-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 300;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.confirm-overlay.open { display: flex; }
+
+.confirm-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 28px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.confirm-icon { font-size: 2.5rem; margin-bottom: 14px; }
+.confirm-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+.confirm-msg { font-size: 0.82rem; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+.confirm-btns { display: flex; gap: 10px; }
+.confirm-btns .btn { flex: 1; justify-content: center; }
+
+/* ─── Toast ──────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 13px 18px;
+  display: flex; align-items: center; gap: 11px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 999;
+  min-width: 260px;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+
+.toast-ico { font-size: 1.1rem; }
+.toast-msg { font-size: 0.82rem; }
+.toast-msg strong { display: block; }
+.toast-msg small { color: var(--muted); font-size: 0.72rem; }
+
+/* ─── Chart bar (dept breakdown) ─────────────────── */
+.dept-breakdown { display: flex; flex-direction: column; gap: 8px; }
+
+.dept-bar-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+}
+
+.dept-bar-label { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.dept-bar-track {
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.dept-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 0.6s cubic-bezier(0.34,1,0.64,1);
+}
+
+.dept-bar-count { text-align: right; color: var(--muted); font-family: var(--mono); font-size: 0.72rem; }
+
+/* ─── Animations ─────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ─── Responsive ─────────────────────────────────── */
+@media (max-width: 1100px) {
+  .table-header-row,
+  .ticket-row {
+    grid-template-columns: 110px 1fr 120px 80px 100px 110px;
+  }
+  .col-studno { display: none; }
+}
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .stats-row { grid-template-columns: repeat(2,1fr); }
+}
+
+@media (max-width: 600px) {
+  .content { padding: 16px; }
+  .table-wrap { border-radius: 12px; overflow-x: auto; }
+  .table-header-row, .ticket-row { min-width: 700px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">🛡️</div>
+    <div class="logo-title">Support Admin</div>
+    <div class="logo-sub">DASHBOARD v1.0</div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Views</div>
+    <button class="nav-item active" onclick="setView('all', this)">
+      <span class="nav-icon">🗂</span> All Tickets
+      <span class="nav-count" id="cnt-all">0</span>
+    </button>
+    <button class="nav-item" onclick="setView('Open', this)">
+      <span class="nav-icon">📬</span> Open
+      <span class="nav-count warn" id="cnt-open">0</span>
+    </button>
+    <button class="nav-item" onclick="setView('Pending', this)">
+      <span class="nav-icon">⏳</span> Pending
+      <span class="nav-count" id="cnt-pending">0</span>
+    </button>
+    <button class="nav-item" onclick="setView('Closed', this)">
+      <span class="nav-icon">✅</span> Closed
+      <span class="nav-count" id="cnt-closed">0</span>
+    </button>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Priority</div>
+    <button class="nav-item" onclick="setView('High', this)">
+      <span class="nav-icon">🔴</span> High / Urgent
+      <span class="nav-count warn" id="cnt-high">0</span>
+    </button>
+    <button class="nav-item" onclick="setView('Medium', this)">
+      <span class="nav-icon">🟡</span> Medium
+    </button>
+    <button class="nav-item" onclick="setView('Low', this)">
+      <span class="nav-icon">🟢</span> Low
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="admin-badge">
+      <div class="admin-avatar">👤</div>
+      <div>
+        <div class="admin-name">Administrator</div>
+        <div class="admin-role">Support Manager</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════ MAIN ═══════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">All Tickets</div>
+      <div class="topbar-sub" id="topbar-sub">Loading…</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="live-dot" title="Live — synced with student portal"></div>
+      <button class="btn btn-ghost" onclick="refresh()">↻ Refresh</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn btn-ghost btn-danger-soft" onclick="confirmBulkClose()" id="bulk-close-btn" style="display:none;">✕ Close All Open</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card" style="--s-color:var(--accent)">
+        <div class="stat-label">Total Tickets</div>
+        <div class="stat-num" id="s-total">0</div>
+        <div class="stat-meta">All time</div>
+      </div>
+      <div class="stat-card" style="--s-color:var(--danger)">
+        <div class="stat-label">Open</div>
+        <div class="stat-num" id="s-open">0</div>
+        <div class="stat-meta">Awaiting response</div>
+      </div>
+      <div class="stat-card" style="--s-color:var(--warning)">
+        <div class="stat-label">Pending</div>
+        <div class="stat-num" id="s-pending">0</div>
+        <div class="stat-meta">In progress</div>
+      </div>
+      <div class="stat-card" style="--s-color:var(--success)">
+        <div class="stat-label">Resolved</div>
+        <div class="stat-num" id="s-closed">0</div>
+        <div class="stat-meta">Closed tickets</div>
+      </div>
+    </div>
+
+    <!-- Dept breakdown -->
+    <div class="table-wrap" style="margin-bottom:16px;padding:18px 20px;">
+      <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">Department Breakdown</div>
+      <div class="dept-breakdown" id="dept-breakdown">—</div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search by name, reference, subject, student number…" oninput="applyFilters()">
+      </div>
+      <select class="filter-select" id="filter-status" onchange="applyFilters()">
+        <option value="">All Statuses</option>
+        <option value="Open">Open</option>
+        <option value="Pending">Pending</option>
+        <option value="Closed">Closed</option>
+      </select>
+      <select class="filter-select" id="filter-priority" onchange="applyFilters()">
+        <option value="">All Priorities</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+      <select class="filter-select" id="filter-dept" onchange="applyFilters()">
+        <option value="">All Departments</option>
+      </select>
+      <select class="filter-select" id="filter-sort" onchange="applyFilters()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="priority">Priority (High→Low)</option>
+        <option value="status">Status</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-header-row">
+        <div>Reference</div>
+        <div>Subject / Student</div>
+        <div>Department</div>
+        <div>Priority</div>
+        <div>Status</div>
+        <div>Submitted</div>
+        <div style="text-align:right">Actions</div>
+      </div>
+      <div id="ticket-table-body">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div class="empty-title">No tickets found</div>
+          <div class="empty-sub">Tickets submitted in the student portal will appear here.</div>
+        </div>
+      </div>
+      <div class="pagination" id="pagination" style="display:none">
+        <span id="page-info">Showing 0–0 of 0</span>
+        <div class="page-btns" id="page-btns"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ═══════ DRAWER ═══════ -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-top">
+    <div style="flex:1;min-width:0">
+      <div class="drawer-ref" id="d-ref">—</div>
+      <div class="drawer-subject" id="d-subject">—</div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+
+  <div class="drawer-body">
+    <div class="drawer-section">
+      <div class="drawer-section-title">Ticket Info</div>
+      <div class="detail-grid">
+        <div class="detail-item"><label>Student Name</label><p id="d-name">—</p></div>
+        <div class="detail-item"><label>Username</label><p id="d-studno" style="font-family:var(--mono);font-size:0.8rem;">—</p></div>
+        <div class="detail-item"><label>Department</label><p id="d-dept">—</p></div>
+        <div class="detail-item"><label>Routing Email</label><p id="d-email" style="font-size:0.78rem;word-break:break-all;">—</p></div>
+        <div class="detail-item"><label>Priority</label><p id="d-priority">—</p></div>
+        <div class="detail-item"><label>Submitted</label><p id="d-date" style="font-family:var(--mono);font-size:0.75rem;">—</p></div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">Description</div>
+      <div class="desc-box" id="d-desc">—</div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">Status &amp; Admin Notes</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <label style="font-size:0.75rem;color:var(--muted);font-weight:500;">Change status:</label>
+        <select class="status-select" id="d-status-sel" onchange="updateStatusFromDrawer()">
+          <option value="Open">Open</option>
+          <option value="Pending">Pending</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+      <textarea class="notes-area" id="d-notes" placeholder="Add admin notes or response details here…" oninput="saveNotes()"></textarea>
+    </div>
+  </div>
+
+  <div class="drawer-footer">
+    <button class="btn btn-success" onclick="closeTicketFromDrawer()">✓ Close Ticket</button>
+    <button class="btn btn-warn"   onclick="pendingTicketFromDrawer()">⏳ Mark Pending</button>
+    <button class="btn btn-danger-soft" onclick="deleteTicketFromDrawer()">🗑 Delete</button>
+  </div>
+</div>
+
+<!-- ═══════ CONFIRM DIALOG ═══════ -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="c-icon">⚠️</div>
+    <div class="confirm-title" id="c-title">Are you sure?</div>
+    <div class="confirm-msg" id="c-msg">This action cannot be undone.</div>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger-soft" id="c-confirm-btn" onclick="executeConfirm()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TOAST ═══════ -->
+<div class="toast" id="toast">
+  <div class="toast-ico" id="t-ico">✅</div>
+  <div class="toast-msg">
+    <strong id="t-title">Done</strong>
+    <small id="t-sub"></small>
+  </div>
+</div>
+
+<!-- ═══════ SCRIPT ═══════ -->
+<script>
+// ── Storage key (matches student portal) ──
+const STORAGE_KEY = 'sp_tickets';
+const NOTES_KEY   = 'sp_admin_notes';
+
+// ── State ──
+let allTickets   = [];
+let filtered     = [];
+let currentView  = 'all';
+let openDrawerIdx = null; // index in allTickets
+let confirmAction = null;
+
+const PER_PAGE = 15;
+let currentPage = 1;
+
+// ── Seed demo data if empty ──
+function seedDemo() {
+  const sample = [
+    { ref:'TKT-DEMO01', name:'Amahle Dlamini',   studno:'STU2024001', subject:'Cannot access Moodle course',        desc:'I enrolled last week but the course still shows as locked.',           priority:'High',   dept:'IT Helpdesk',     email:'it@inst.ac.za',      status:'Open',    created: daysAgo(0)  },
+    { ref:'TKT-DEMO02', name:'Sipho Nkosi',       studno:'STU2024002', subject:'Outstanding balance query',          desc:'My account shows a balance I already paid. Please advise.',            priority:'Medium', dept:'Finance / Fees',  email:'fin@inst.ac.za',     status:'Open',    created: daysAgo(1)  },
+    { ref:'TKT-DEMO03', name:'Lerato Mokoena',    studno:'STU2024003', subject:'Assignment submission error',        desc:'The submission portal gives a 503 error every time I try to upload.',  priority:'High',   dept:'Academic Support',email:'acad@inst.ac.za',    status:'Pending', created: daysAgo(2)  },
+    { ref:'TKT-DEMO04', name:'Willem Pietersen',  studno:'STU2024004', subject:'Library book renewal request',       desc:'I need to renew three books. They are due tomorrow.',                  priority:'Low',    dept:'Library Services',email:'lib@inst.ac.za',     status:'Open',    created: daysAgo(2)  },
+    { ref:'TKT-DEMO05', name:'Zanele Khumalo',    studno:'STU2024005', subject:'Re-admission documentation',         desc:'I need a letter confirming my re-admission status for a bursary.',    priority:'Medium', dept:'Admissions',      email:'adm@inst.ac.za',     status:'Closed',  created: daysAgo(5)  },
+    { ref:'TKT-DEMO06', name:'Thabo Sithole',     studno:'STU2024006', subject:'Student card lost',                  desc:'My student card was stolen. I need a replacement urgently.',           priority:'High',   dept:'Student Affairs', email:'sa@inst.ac.za',      status:'Open',    created: daysAgo(0)  },
+    { ref:'TKT-DEMO07', name:'Nomvula Hadebe',    studno:'STU2024007', subject:'Wifi password not working',          desc:'The campus wifi keeps rejecting my credentials since last Monday.',    priority:'Medium', dept:'IT Helpdesk',     email:'it@inst.ac.za',      status:'Pending', created: daysAgo(3)  },
+    { ref:'TKT-DEMO08', name:'Kagiso Molefe',     studno:'STU2024008', subject:'Bursary confirmation letter',        desc:'I need an official letter for NSFAS confirming my enrollment.',       priority:'High',   dept:'Student Affairs', email:'sa@inst.ac.za',      status:'Open',    created: daysAgo(1)  },
+    { ref:'TKT-DEMO09', name:'Precious Dube',     studno:'STU2024009', subject:'Exam timetable query',               desc:'The timetable shows two exams at the same time on 15 June.',          priority:'Medium', dept:'Academic Support',email:'acad@inst.ac.za',    status:'Closed',  created: daysAgo(8)  },
+    { ref:'TKT-DEMO10', name:'Siyanda Buthelezi', studno:'STU2024010', subject:'Fee exemption application',          desc:'I was told I qualify for a fee exemption but the form is missing.',   priority:'Low',    dept:'Finance / Fees',  email:'fin@inst.ac.za',     status:'Open',    created: daysAgo(4)  },
+  ];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sample));
+}
+
+function daysAgo(n) {
+  const d = new Date(); d.setDate(d.getDate() - n);
+  return d.toISOString();
+}
+
+// ── Boot ──
+init();
+
+function init() {
+  load();
+  if (allTickets.length === 0) seedDemo(), load();
+  populateDeptFilter();
+  applyFilters();
+  updateStats();
+  updateCounts();
+  updateDeptBreakdown();
+  document.getElementById('bulk-close-btn').style.display = allTickets.some(t=>t.status==='Open') ? '' : 'none';
+}
+
+function load() {
+  allTickets = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(allTickets));
+}
+
+function refresh() {
+  load();
+  applyFilters();
+  updateStats();
+  updateCounts();
+  updateDeptBreakdown();
+  toast('✅','Refreshed','Ticket data reloaded.');
+}
+
+// ── Sidebar views ──
+function setView(view, btn) {
+  currentView = view;
+  currentPage = 1;
+
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const titles = {
+    all:'All Tickets', Open:'Open Tickets', Pending:'Pending Tickets',
+    Closed:'Closed Tickets', High:'High Priority', Medium:'Medium Priority', Low:'Low Priority'
+  };
+  document.getElementById('topbar-title').textContent = titles[view] || view;
+
+  // Pre-set filter selects to match
+  const ss = document.getElementById('filter-status');
+  const ps = document.getElementById('filter-priority');
+  ss.value = ''; ps.value = '';
+  if (['Open','Pending','Closed'].includes(view)) ss.value = view;
+  if (['High','Medium','Low'].includes(view))     ps.value = view;
+
+  applyFilters();
+}
+
+// ── Filters & search ──
+function applyFilters() {
+  const q    = document.getElementById('search-input').value.trim().toLowerCase();
+  const fSt  = document.getElementById('filter-status').value;
+  const fPr  = document.getElementById('filter-priority').value;
+  const fDp  = document.getElementById('filter-dept').value;
+  const sort = document.getElementById('filter-sort').value;
+
+  filtered = allTickets.filter(t => {
+    const matchQ  = !q || [t.ref,t.name,t.studno,t.subject,t.dept].some(v=>(v||'').toLowerCase().includes(q));
+    const matchSt = !fSt || t.status === fSt;
+    const matchPr = !fPr || t.priority === fPr;
+    const matchDp = !fDp || t.dept === fDp;
+    return matchQ && matchSt && matchPr && matchDp;
+  });
+
+  const pMap = {High:3, Medium:2, Low:1};
+  filtered.sort((a,b) => {
+    if (sort==='newest')   return new Date(b.created)-new Date(a.created);
+    if (sort==='oldest')   return new Date(a.created)-new Date(b.created);
+    if (sort==='priority') return (pMap[b.priority]||0)-(pMap[a.priority]||0);
+    if (sort==='status')   return a.status.localeCompare(b.status);
+    return 0;
+  });
+
+  currentPage = 1;
+  renderTable();
+  updateSubtitle();
+}
+
+function updateSubtitle() {
+  document.getElementById('topbar-sub').textContent =
+    `${filtered.length} ticket${filtered.length!==1?'s':''} · Last updated ${fmtNow()}`;
+}
+
+// ── Table render ──
+function renderTable() {
+  const body = document.getElementById('ticket-table-body');
+  const pg   = document.getElementById('pagination');
+
+  if (!filtered.length) {
+    body.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">No tickets match</div>
+        <div class="empty-sub">Try adjusting your search or filters.</div>
+      </div>`;
+    pg.style.display = 'none';
+    return;
+  }
+
+  const total = filtered.length;
+  const pages = Math.ceil(total / PER_PAGE);
+  if (currentPage > pages) currentPage = pages;
+  const start = (currentPage-1)*PER_PAGE;
+  const slice = filtered.slice(start, start+PER_PAGE);
+
+  const priorityOrder = { High: 0, Medium: 1, Low: 2 };
+
+  body.innerHTML = slice.map((t, i) => {
+    const globalIdx = allTickets.indexOf(t);
+    const sc = t.status.toLowerCase();
+    const pc = t.priority.toLowerCase();
+    const delay = i * 0.04;
+    return `
+    <div class="ticket-row" style="animation-delay:${delay}s" onclick="openDrawer(${globalIdx})">
+      <div class="cell-ref">${t.ref}</div>
+      <div class="cell-subject">
+        <strong>${esc(t.subject)}</strong>
+        <span>${esc(t.name)} · ${esc(t.studno||'—')}</span>
+      </div>
+      <div class="cell-dept">${esc(t.dept)}</div>
+      <div><span class="badge badge-${pc}"><span class="dot-sm"></span>${t.priority}</span></div>
+      <div><span class="badge badge-${sc}"><span class="dot-sm"></span>${t.status}</span></div>
+      <div class="cell-date">${fmtDateShort(t.created)}</div>
+      <div class="cell-actions" onclick="event.stopPropagation()">
+        ${t.status!=='Closed' ? `<button class="action-btn close-btn"   title="Close ticket"   onclick="quickClose(${globalIdx})">✓</button>` : `<button class="action-btn reopen-btn" title="Reopen ticket"  onclick="quickReopen(${globalIdx})">↩</button>`}
+        ${t.status==='Open'   ? `<button class="action-btn"             title="Mark pending"   onclick="quickPending(${globalIdx})">⏳</button>` : ''}
+        <button class="action-btn del-btn" title="Delete ticket" onclick="promptDelete(${globalIdx})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Pagination
+  pg.style.display = '';
+  document.getElementById('page-info').textContent =
+    `Showing ${start+1}–${Math.min(start+PER_PAGE, total)} of ${total}`;
+
+  const btns = document.getElementById('page-btns');
+  btns.innerHTML = `<button class="page-btn" ${currentPage===1?'disabled':''} onclick="goPage(${currentPage-1})">‹</button>`;
+  for (let p=1;p<=pages;p++) {
+    if (pages<=7 || p===1 || p===pages || Math.abs(p-currentPage)<=1) {
+      btns.innerHTML += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    } else if (Math.abs(p-currentPage)===2) {
+      btns.innerHTML += `<span style="color:var(--muted);padding:0 4px;font-size:0.8rem">…</span>`;
+    }
+  }
+  btns.innerHTML += `<button class="page-btn" ${currentPage===pages?'disabled':''} onclick="goPage(${currentPage+1})">›</button>`;
+}
+
+function goPage(p) { currentPage = p; renderTable(); }
+
+// ── Stats ──
+function updateStats() {
+  const open    = allTickets.filter(t=>t.status==='Open').length;
+  const pending = allTickets.filter(t=>t.status==='Pending').length;
+  const closed  = allTickets.filter(t=>t.status==='Closed').length;
+  document.getElementById('s-total').textContent   = allTickets.length;
+  document.getElementById('s-open').textContent    = open;
+  document.getElementById('s-pending').textContent = pending;
+  document.getElementById('s-closed').textContent  = closed;
+}
+
+function updateCounts() {
+  const open    = allTickets.filter(t=>t.status==='Open').length;
+  const pending = allTickets.filter(t=>t.status==='Pending').length;
+  const closed  = allTickets.filter(t=>t.status==='Closed').length;
+  const high    = allTickets.filter(t=>t.priority==='High' && t.status!=='Closed').length;
+  document.getElementById('cnt-all').textContent     = allTickets.length;
+  document.getElementById('cnt-open').textContent    = open;
+  document.getElementById('cnt-pending').textContent = pending;
+  document.getElementById('cnt-closed').textContent  = closed;
+  document.getElementById('cnt-high').textContent    = high;
+}
+
+// ── Dept breakdown ──
+function updateDeptBreakdown() {
+  const counts = {};
+  allTickets.forEach(t => { counts[t.dept] = (counts[t.dept]||0)+1; });
+  const max = Math.max(...Object.values(counts), 1);
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('dept-breakdown').innerHTML = sorted.map(([d,c])=>`
+    <div class="dept-bar-row">
+      <div class="dept-bar-label">${esc(d)}</div>
+      <div class="dept-bar-track"><div class="dept-bar-fill" style="width:${Math.round(c/max*100)}%"></div></div>
+      <div class="dept-bar-count">${c}</div>
+    </div>`).join('') || '<span style="color:var(--muted);font-size:0.8rem;">No data</span>';
+}
+
+// ── Dept filter ──
+function populateDeptFilter() {
+  const depts = [...new Set(allTickets.map(t=>t.dept))].sort();
+  const sel = document.getElementById('filter-dept');
+  depts.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    sel.appendChild(o);
+  });
+}
+
+// ── Quick actions ──
+function quickClose(i)   { allTickets[i].status='Closed';  save(); afterAction('Ticket closed.',i); }
+function quickReopen(i)  { allTickets[i].status='Open';    save(); afterAction('Ticket reopened.',i); }
+function quickPending(i) { allTickets[i].status='Pending'; save(); afterAction('Marked as pending.',i); }
+
+function afterAction(msg, i) {
+  applyFilters(); updateStats(); updateCounts(); updateDeptBreakdown();
+  document.getElementById('bulk-close-btn').style.display = allTickets.some(t=>t.status==='Open') ? '' : 'none';
+  toast('✅', msg, allTickets[i]?.ref || '');
+}
+
+// ── Drawer ──
+function openDrawer(i) {
+  openDrawerIdx = i;
+  const t = allTickets[i];
+  const notes = JSON.parse(localStorage.getItem(NOTES_KEY)||'{}');
+
+  document.getElementById('d-ref').textContent     = t.ref;
+  document.getElementById('d-subject').textContent = t.subject;
+  document.getElementById('d-name').textContent    = t.name;
+  document.getElementById('d-studno').textContent  = t.studno || '—';
+  document.getElementById('d-dept').textContent    = t.dept;
+  document.getElementById('d-email').textContent   = t.email || '—';
+  document.getElementById('d-desc').textContent    = t.desc;
+  document.getElementById('d-date').textContent    = fmtDate(t.created);
+  document.getElementById('d-notes').value         = notes[t.ref] || '';
+  document.getElementById('d-status-sel').value    = t.status;
+
+  // Priority badge
+  const pc = t.priority.toLowerCase();
+  document.getElementById('d-priority').innerHTML = `<span class="badge badge-${pc}"><span class="dot-sm"></span>${t.priority}</span>`;
+
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+  openDrawerIdx = null;
+}
+
+function updateStatusFromDrawer() {
+  if (openDrawerIdx === null) return;
+  const val = document.getElementById('d-status-sel').value;
+  allTickets[openDrawerIdx].status = val;
+  save(); afterAction('Status updated to ' + val + '.', openDrawerIdx);
+}
+
+function saveNotes() {
+  if (openDrawerIdx === null) return;
+  const ref = allTickets[openDrawerIdx].ref;
+  const notes = JSON.parse(localStorage.getItem(NOTES_KEY)||'{}');
+  notes[ref] = document.getElementById('d-notes').value;
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+
+function closeTicketFromDrawer() {
+  if (openDrawerIdx===null) return;
+  quickClose(openDrawerIdx);
+  document.getElementById('d-status-sel').value = 'Closed';
+}
+
+function pendingTicketFromDrawer() {
+  if (openDrawerIdx===null) return;
+  quickPending(openDrawerIdx);
+  document.getElementById('d-status-sel').value = 'Pending';
+}
+
+function deleteTicketFromDrawer() {
+  if (openDrawerIdx===null) return;
+  promptDelete(openDrawerIdx, true);
+}
+
+// ── Delete ──
+function promptDelete(i, fromDrawer=false) {
+  const t = allTickets[i];
+  showConfirm('🗑️','Delete Ticket',
+    `Delete <strong>${t.ref}</strong>? This cannot be undone.`,
+    () => {
+      allTickets.splice(i, 1);
+      save();
+      if (fromDrawer) closeDrawer();
+      applyFilters(); updateStats(); updateCounts(); updateDeptBreakdown();
+      toast('🗑️','Ticket deleted.', t.ref);
+    });
+}
+
+// ── Bulk close ──
+function confirmBulkClose() {
+  const n = allTickets.filter(t=>t.status==='Open').length;
+  showConfirm('⚠️','Close All Open Tickets',
+    `This will close all <strong>${n}</strong> open tickets. Are you sure?`,
+    () => {
+      allTickets.forEach(t => { if(t.status==='Open') t.status='Closed'; });
+      save(); applyFilters(); updateStats(); updateCounts(); updateDeptBreakdown();
+      document.getElementById('bulk-close-btn').style.display = 'none';
+      toast('✅',`${n} tickets closed.`,'All open tickets resolved.');
+    });
+}
+
+// ── Export CSV ──
+function exportCSV() {
+  const rows = [['Reference','Name','Username','Subject','Department','Priority','Status','Submitted','Description']];
+  allTickets.forEach(t => rows.push([
+    t.ref, t.name, t.studno||'', t.subject, t.dept, t.priority, t.status,
+    fmtDate(t.created), (t.desc||'').replace(/\n/g,' ')
+  ]));
+  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `tickets-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('⬇️','CSV exported.',`${allTickets.length} records.`);
+}
+
+// ── Confirm dialog ──
+function showConfirm(icon, title, msg, action) {
+  document.getElementById('c-icon').textContent  = icon;
+  document.getElementById('c-title').textContent = title;
+  document.getElementById('c-msg').innerHTML     = msg;
+  confirmAction = action;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('open'); confirmAction=null; }
+function executeConfirm() { closeConfirm(); if(confirmAction) confirmAction(); }
+
+// ── Toast ──
+function toast(ico, title, sub='') {
+  const el = document.getElementById('toast');
+  document.getElementById('t-ico').textContent   = ico;
+  document.getElementById('t-title').textContent = title;
+  document.getElementById('t-sub').textContent   = sub;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'), 3500);
+}
+
+// ── Helpers ──
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'})
+    + ' ' + d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
+}
+
+function fmtDateShort(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60)    return 'Just now';
+  if (diff < 3600)  return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'});
+}
+
+function fmtNow() {
+  return new Date().toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { closeDrawer(); closeConfirm(); }
+});
+
+// ── Auto-refresh every 30s ──
+setInterval(() => {
+  load(); applyFilters(); updateStats(); updateCounts(); updateDeptBreakdown();
+}, 30000);
+</script>
+</body>
+</html>
