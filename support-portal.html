@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Support Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2333;
+    --border: #2a3045;
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #e8eaf0;
+    --muted: #7a83a0;
+    --font: 'Sora', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,142,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,142,247,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .portal-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  /* Header */
+  .portal-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 36px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .header-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(79,142,247,0.3);
+  }
+
+  .header-text h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 40%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-text p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 28px;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 0.82rem;
+    font-weight: 500;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(79,142,247,0.35);
+  }
+
+  /* Panel */
+  .panel { display: none; animation: fadeUp 0.4s ease both; }
+  .panel.active { display: block; }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* Form */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .form-row.single { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.88rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,142,247,0.12);
+  }
+
+  select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a83a0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+  textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+
+  /* Priority badges */
+  .priority-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .priority-opt {
+    position: relative;
+  }
+
+  .priority-opt input[type="radio"] {
+    position: absolute; opacity: 0; width: 0; height: 0;
+  }
+
+  .priority-opt label {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .priority-opt input:checked + label {
+    border-color: var(--p-color);
+    background: color-mix(in srgb, var(--p-color) 12%, var(--bg));
+    color: var(--p-color);
+  }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--p-color); flex-shrink: 0; }
+
+  .p-low  { --p-color: var(--success); }
+  .p-med  { --p-color: var(--warning); }
+  .p-high { --p-color: var(--danger);  }
+
+  /* Departments */
+  .dept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .dept-card {
+    position: relative;
+  }
+
+  .dept-card input[type="radio"] {
+    position: absolute; opacity: 0; width: 0; height: 0;
+  }
+
+  .dept-card label {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; padding: 16px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .dept-card label:hover { border-color: var(--accent); color: var(--text); }
+
+  .dept-card input:checked + label {
+    border-color: var(--accent);
+    background: rgba(79,142,247,0.1);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+
+  .dept-icon { font-size: 1.5rem; }
+
+  /* File upload */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+  }
+
+  .upload-area:hover { border-color: var(--accent); background: rgba(79,142,247,0.05); }
+  .upload-area.drag-over { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+
+  .upload-area input { display: none; }
+  .upload-area p { font-size: 0.82rem; color: var(--muted); margin-top: 6px; }
+  .upload-area .up-icon { font-size: 1.8rem; }
+
+  .file-list { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .file-tag {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    color: var(--text);
+    font-family: var(--mono);
+  }
+
+  .file-tag button {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 0.85rem; line-height: 1;
+    padding: 0; transition: color 0.2s;
+  }
+  .file-tag button:hover { color: var(--danger); }
+
+  /* Submit button */
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.02em;
+    position: relative;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(79,142,247,0.4);
+  }
+
+  .submit-btn:active { transform: translateY(0); }
+
+  .submit-btn.loading { pointer-events: none; opacity: 0.8; }
+
+  /* Ticket list */
+  .ticket-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .ticket-item:hover { border-color: var(--accent); }
+
+  .ticket-ref {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .ticket-subject { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+
+  .ticket-meta { font-size: 0.75rem; color: var(--muted); display: flex; gap: 12px; }
+
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+
+  .status-open    { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .status-pending { background: rgba(245,158,11,0.15); color: var(--warning); }
+  .status-closed  { background: rgba(34,197,94,0.15);  color: var(--success); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--success);
+    border-radius: 14px;
+    padding: 16px 22px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 999;
+    max-width: 340px;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  .toast-icon { font-size: 1.3rem; flex-shrink: 0; }
+
+  .toast-text { font-size: 0.85rem; }
+  .toast-text strong { display: block; margin-bottom: 2px; color: var(--success); }
+  .toast-text span { color: var(--muted); font-size: 0.78rem; }
+
+  /* Admin settings */
+  .dept-settings { display: flex; flex-direction: column; gap: 10px; }
+
+  .dept-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  .dept-row input { margin-bottom: 0; }
+
+  .icon-cell { font-size: 1.2rem; text-align: center; }
+
+  .btn-small {
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: var(--font);
+    transition: all 0.2s;
+  }
+
+  .btn-danger { background: rgba(239,68,68,0.15); color: var(--danger); }
+  .btn-danger:hover { background: rgba(239,68,68,0.25); }
+
+  .btn-add {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Info box */
+  .info-box {
+    background: rgba(79,142,247,0.07);
+    border: 1px solid rgba(79,142,247,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 18px;
+    display: flex; gap: 10px;
+  }
+
+  .info-box span { flex-shrink: 0; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    max-width: 500px;
+    width: 90%;
+    animation: fadeUp 0.3s ease;
+  }
+
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: start;
+    margin-bottom: 18px;
+  }
+
+  .modal-title { font-size: 1.05rem; font-weight: 700; }
+  .modal-ref { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); margin-top: 3px; }
+
+  .modal-close {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px; width: 32px; height: 32px;
+    cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  }
+
+  .modal-detail { margin-bottom: 12px; }
+  .modal-detail label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .modal-detail p { font-size: 0.88rem; }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .priority-grid { grid-template-columns: 1fr; }
+    .dept-grid { grid-template-columns: repeat(2, 1fr); }
+    .dept-row { grid-template-columns: 30px 1fr; }
+    .dept-row .email-input, .dept-row .btn-danger { grid-column: span 2; }
+    .tabs { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="portal-wrap">
+
+  <!-- Header -->
+  <div class="portal-header">
+    <div class="header-icon">🎓</div>
+    <div class="header-text">
+      <h1>Student Support Portal</h1>
+      <p>Submit a ticket · Track your requests · Get help fast</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('new')">
+      ✏️ New Ticket
+    </button>
+    <button class="tab-btn" onclick="switchTab('tickets')">
+      📋 My Tickets
+    </button>
+    <button class="tab-btn" onclick="switchTab('admin')">
+      ⚙️ Admin Setup
+    </button>
+  </div>
+
+  <!-- ══ NEW TICKET PANEL ══ -->
+  <div id="panel-new" class="panel active">
+
+    <div class="card">
+      <div class="card-title">📬 Select Department</div>
+      <div class="dept-grid" id="dept-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎫 Ticket Details</div>
+
+      <div class="form-row">
+        <div class="field">
+          <label>Your Name</label>
+          <input type="text" id="f-name" placeholder="e.g. Jan Smit">
+        </div>
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="f-studno" placeholder="e.g. jsmit01">
+        </div>
+      </div>
+
+      <div class="form-row single">
+        <div class="field">
+          <label>Subject</label>
+          <input type="text" id="f-subject" placeholder="Brief description of your issue">
+        </div>
+      </div>
+
+      <div class="form-row single">
+        <div class="field">
+          <label>Description</label>
+          <textarea id="f-desc" placeholder="Please describe your issue in detail. The more information you provide, the faster we can help you."></textarea>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="display:block;margin-bottom:8px;">Priority</label>
+        <div class="priority-grid">
+          <div class="priority-opt p-low">
+            <input type="radio" name="priority" id="p-low" value="Low" checked>
+            <label for="p-low"><span class="dot"></span>Low</label>
+          </div>
+          <div class="priority-opt p-med">
+            <input type="radio" name="priority" id="p-med" value="Medium">
+            <label for="p-med"><span class="dot"></span>Medium</label>
+          </div>
+          <div class="priority-opt p-high">
+            <input type="radio" name="priority" id="p-high" value="High">
+            <label for="p-high"><span class="dot"></span>High / Urgent</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:18px;">
+        <label>Attachments (optional)</label>
+        <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="dragLeave(event)">
+          <input type="file" id="file-input" multiple onchange="addFiles(this.files)">
+          <div class="up-icon">📎</div>
+          <p>Click to attach files or drag & drop here</p>
+          <p>PDF, DOCX, JPG, PNG — max 10 MB each</p>
+        </div>
+        <div class="file-list" id="file-list"></div>
+      </div>
+
+      <button class="submit-btn" id="submit-btn" onclick="submitTicket()">
+        🚀 Submit Support Ticket
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ MY TICKETS PANEL ══ -->
+  <div id="panel-tickets" class="panel">
+    <div class="card" style="padding:20px 22px 14px;">
+      <div class="card-title">🗂 Your Tickets</div>
+      <div id="ticket-list">
+        <div style="text-align:center;padding:40px 0;color:var(--muted);font-size:0.85rem;">
+          No tickets yet. Submit your first request!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ADMIN SETUP PANEL ══ -->
+  <div id="panel-admin" class="panel">
+    <div class="card">
+      <div class="card-title">🏢 Department Configuration</div>
+      <div class="info-box">
+        <span>ℹ️</span>
+        <div>Configure departments and their routing email addresses below. Each ticket submitted to a department will be sent to the corresponding email. These settings are saved in your browser.</div>
+      </div>
+      <div class="dept-settings" id="dept-settings">
+        <!-- Populated by JS -->
+      </div>
+      <button class="btn-add" onclick="addDept()">＋ Add Department</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔧 Moodle Integration Guide</div>
+      <div style="font-size:0.82rem;color:var(--muted);line-height:1.9;">
+        <p><strong style="color:var(--text);">Option 1 — IFrame Block</strong><br>
+        In Moodle, add a <em>HTML block</em> or use the <em>Page resource</em> and embed this file using an IFrame tag pointing to where you host this file (e.g. your institution's web server).</p>
+        <br>
+        <p><strong style="color:var(--text);">Option 2 — External Tool (LTI)</strong><br>
+        Host this file on your web server and configure an External Tool in Moodle pointing to the URL.</p>
+        <br>
+        <p><strong style="color:var(--text);">Option 3 — Moodle Page Resource</strong><br>
+        Copy the full HTML source and paste it into a Moodle <em>Page</em> resource using the HTML source editor.</p>
+        <br>
+        <p><strong style="color:var(--text);">Email Routing</strong><br>
+        This portal uses <code style="font-family:var(--mono);background:var(--bg);padding:2px 6px;border-radius:4px;">mailto:</code> links for email submission. For a full backend, connect to a PHP/Node.js handler or a service like Formspree, EmailJS, or your institution's ticketing API.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-icon">✅</div>
+  <div class="toast-text">
+    <strong>Ticket Submitted!</strong>
+    <span id="toast-msg">Your request has been sent.</span>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="m-subject">—</div>
+        <div class="modal-ref" id="m-ref">—</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-detail"><label>Department</label><p id="m-dept">—</p></div>
+    <div class="modal-detail"><label>Priority</label><p id="m-priority">—</p></div>
+    <div class="modal-detail"><label>Status</label><p id="m-status">—</p></div>
+    <div class="modal-detail"><label>Submitted</label><p id="m-date">—</p></div>
+    <div class="modal-detail"><label>Description</label><p id="m-desc" style="white-space:pre-wrap;line-height:1.6;">—</p></div>
+  </div>
+</div>
+
+<script>
+// ── Default departments ──
+const DEFAULT_DEPTS = [
+  { icon: '📚', name: 'Academic Support',   email: 'academic@institution.ac.za' },
+  { icon: '🖥️', name: 'IT Helpdesk',        email: 'ithelpdesk@institution.ac.za'},
+  { icon: '🏛️', name: 'Student Affairs',    email: 'studentaffairs@institution.ac.za'},
+];
+
+// ── State ──
+let depts = JSON.parse(localStorage.getItem('sp_depts') || 'null') || DEFAULT_DEPTS;
+let tickets = JSON.parse(localStorage.getItem('sp_tickets') || '[]');
+let attachedFiles = [];
+
+// ── Init ──
+renderDeptGrid();
+renderDeptSettings();
+renderTickets();
+
+function saveDepts() {
+  localStorage.setItem('sp_depts', JSON.stringify(depts));
+  renderDeptGrid();
+  renderDeptSettings();
+}
+
+function saveTickets() {
+  localStorage.setItem('sp_tickets', JSON.stringify(tickets));
+}
+
+// ── Tabs ──
+function switchTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'tickets') renderTickets();
+}
+
+// ── Department grid (new ticket form) ──
+function renderDeptGrid() {
+  const grid = document.getElementById('dept-grid');
+  grid.innerHTML = depts.map((d, i) => `
+    <div class="dept-card">
+      <input type="radio" name="dept" id="dept-${i}" value="${i}" ${i === 0 ? 'checked' : ''}>
+      <label for="dept-${i}">
+        <span class="dept-icon">${d.icon}</span>
+        ${d.name}
+      </label>
+    </div>
+  `).join('');
+}
+
+// ── Admin: department settings ──
+function renderDeptSettings() {
+  const el = document.getElementById('dept-settings');
+  el.innerHTML = depts.map((d, i) => `
+    <div class="dept-row">
+      <div class="icon-cell">${d.icon}</div>
+      <input type="text" value="${d.name}" placeholder="Department name"
+        oninput="depts[${i}].name=this.value;saveDepts()" style="margin:0">
+      <input type="email" value="${d.email}" placeholder="routing@email.com" class="email-input"
+        oninput="depts[${i}].email=this.value;saveDepts()" style="margin:0">
+      <button class="btn-small btn-danger" onclick="removeDept(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addDept() {
+  const icons = ['🏫','📌','🔔','📞','🧑‍💼','📊','🎓','🌐'];
+  depts.push({ icon: icons[depts.length % icons.length], name: 'New Department', email: '' });
+  saveDepts();
+}
+
+function removeDept(i) {
+  if (depts.length <= 1) return;
+  depts.splice(i, 1);
+  saveDepts();
+}
+
+// ── File handling ──
+function addFiles(files) {
+  Array.from(files).forEach(f => {
+    if (!attachedFiles.find(x => x.name === f.name)) attachedFiles.push(f);
+  });
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = attachedFiles.map((f, i) => `
+    <div class="file-tag">
+      📄 ${f.name}
+      <button onclick="removeFile(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeFile(i) { attachedFiles.splice(i, 1); renderFileList(); }
+
+function dragOver(e)  { e.preventDefault(); document.getElementById('upload-area').classList.add('drag-over'); }
+function dragLeave()  { document.getElementById('upload-area').classList.remove('drag-over'); }
+function dropFile(e)  { e.preventDefault(); dragLeave(); addFiles(e.dataTransfer.files); }
+
+// ── Submit ticket ──
+function submitTicket() {
+  const deptIdx = document.querySelector('input[name="dept"]:checked')?.value ?? 0;
+  const dept    = depts[deptIdx];
+  const name    = document.getElementById('f-name').value.trim();
+  const studno  = document.getElementById('f-studno').value.trim();
+  const subject = document.getElementById('f-subject').value.trim();
+  const desc    = document.getElementById('f-desc').value.trim();
+  const priority= document.querySelector('input[name="priority"]:checked')?.value ?? 'Low';
+
+  if (!name || !subject || !desc) {
+    shake(document.getElementById('submit-btn'));
+    showToastError('Please fill in your name, subject, and description.');
+    return;
+  }
+
+  const ref = 'TKT-' + Date.now().toString(36).toUpperCase();
+  const ticket = {
+    ref, name, studno, subject, desc, priority,
+    dept: dept.name, email: dept.email,
+    status: 'Open',
+    created: new Date().toISOString()
+  };
+
+  tickets.unshift(ticket);
+  saveTickets();
+
+  // mailto fallback (replace with fetch() to backend for production)
+  const body = encodeURIComponent(
+    `Ticket Reference: ${ref}\nStudent: ${name} (${studno})\nPriority: ${priority}\n\n${desc}`
+  );
+  const mailto = `mailto:${dept.email}?subject=${encodeURIComponent(`[${ref}] ${subject}`)}&body=${body}`;
+
+  // Open mail client
+  const link = document.createElement('a');
+  link.href = mailto; link.click();
+
+  showToast(`Ref: ${ref} · Sent to ${dept.name}`);
+
+  // Reset form
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-studno').value = '';
+  document.getElementById('f-subject').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('p-low').checked = true;
+  attachedFiles = []; renderFileList();
+}
+
+// ── Ticket list ──
+function renderTickets() {
+  const el = document.getElementById('ticket-list');
+  if (!tickets.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:0.85rem;">No tickets yet. Submit your first request!</div>';
+    return;
+  }
+  el.innerHTML = tickets.map((t, i) => `
+    <div class="ticket-item" onclick="openModal(${i})" style="animation-delay:${i*0.06}s">
+      <div>
+        <div class="ticket-ref">${t.ref}</div>
+        <div class="ticket-subject">${t.subject}</div>
+        <div class="ticket-meta">
+          <span>🏢 ${t.dept}</span>
+          <span>⚡ ${t.priority}</span>
+          <span>🕐 ${fmtDate(t.created)}</span>
+        </div>
+      </div>
+      <span class="status-badge status-${t.status.toLowerCase()}">${t.status}</span>
+    </div>
+  `).join('');
+}
+
+function openModal(i) {
+  const t = tickets[i];
+  document.getElementById('m-subject').textContent  = t.subject;
+  document.getElementById('m-ref').textContent      = t.ref;
+  document.getElementById('m-dept').textContent     = t.dept;
+  document.getElementById('m-priority').textContent = t.priority;
+  document.getElementById('m-status').textContent   = t.status;
+  document.getElementById('m-date').textContent     = fmtDate(t.created);
+  document.getElementById('m-desc').textContent     = t.desc;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
+}
+
+// ── Helpers ──
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-ZA', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.querySelector('.toast-icon').textContent = '✅';
+  t.style.borderColor = 'var(--success)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function showToastError(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.querySelector('.toast-icon').textContent = '⚠️';
+  t.style.borderColor = 'var(--danger)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function shake(el) {
+  el.style.animation = 'none';
+  el.offsetHeight; // reflow
+  el.style.animation = 'shake 0.4s ease';
+  setTimeout(() => el.style.animation = '', 400);
+}
+</script>
+
+<style>
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}
+</style>
+
+</body>
+</html>
